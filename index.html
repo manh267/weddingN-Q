@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Hỷ Sự Đương Đại</title>
+<title>Ngày Cưới Chúng Mình</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Quicksand:wght@500;600;700&family=Be+Vietnam+Pro:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -603,7 +603,7 @@ h2{font-size:clamp(2.1rem,6vw,2.9rem);margin-bottom:6px;}
   <!-- 08 — CÒN BAO LÂU -->
   <section>
     <div class="eyebrow-num serif reveal">07</div>
-    <h2 class="reveal">Còn Bao Lâu Nữa Đến Ngày<br>Chúng Mình Về Chung Nhà?</h2>
+    <h2 class="reveal">Còn Bao Lâu Nữa <br>Chúng Mình Về Chung Nhà?</h2>
     <div class="cd-row reveal">
       <span class="cd-num" id="cdDays">000</span><span class="cd-unit round">ngày</span><span class="cd-dot">·</span>
       <span class="cd-num" id="cdHours">00</span><span class="cd-unit round">giờ</span><span class="cd-dot">·</span>
@@ -668,22 +668,96 @@ h2{font-size:clamp(2.1rem,6vw,2.9rem);margin-bottom:6px;}
   <img class="motif" src="https://itndgocigbwsddblvljn.supabase.co/storage/v1/object/public/cuoiN&amp;Q/day%20to%20hong.png" alt="Dây tơ hồng">
 
   <!-- 09 — SỔ HỶ -->
-  <section>
-    <div class="eyebrow-num serif reveal">09</div>
-    <div class="eyebrow reveal">Sổ Hỷ</div>
-    <h2 class="reveal">Lưu Bút Trao Nhau</h2>
-    <form class="wish-form reveal" id="wish-form">
-      <label>Tên của bạn</label>
-      <input type="text" required placeholder="Nhập tên...">
-      <label>Lời chúc</label>
-      <textarea rows="3" required placeholder="Gửi lời chúc đến đôi uyên ương..."></textarea>
-      <button type="submit" class="wish-submit">Treo Lời Chúc</button>
-    </form>
-    <div class="tags-wrap" id="tagsWrap">
-      <div class="wish-tag" style="--r:-3deg;"><div class="wa">Bạn thân</div><div class="wt">mẫu lời chúc</div><div class="wm">Chúc hai bạn trăm năm hạnh phúc!</div></div>
-      <div class="wish-tag" style="--r:2deg;"><div class="wa">Đồng nghiệp</div><div class="wt">mẫu lời chúc</div><div class="wm">Chúc mừng hạnh phúc, sớm có tin vui!</div></div>
-    </div>
-  </section>
+<section>
+  <div class="eyebrow-num serif reveal">09</div>
+  <div class="eyebrow reveal">Sổ Hỷ</div>
+  <h2 class="reveal">Lưu Bút Trao Nhau</h2>
+  
+  <form class="wish-form reveal" id="wish-form">
+    <label>Tên của bạn</label>
+    <input type="text" id="guestName" required placeholder="Nhập tên...">
+    <label>Lời chúc</label>
+    <textarea id="guestMessage" rows="3" required placeholder="Gửi lời chúc đến đôi uyên ương..."></textarea>
+    <button type="submit" class="wish-submit">Treo Lời Chúc</button>
+  </form>
+
+  <div class="tags-wrap" id="tagsWrap">
+    <!-- Lời chúc từ Google Sheet sẽ tự động nạp vào đây -->
+    <div style="text-align: center; width: 100%; color: #888;">Đang tải lời chúc...</div>
+  </div>
+</section>
+
+<script>
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby2fzl5eST6UjzlaODi0mL6rPkQf6l9b4vyDZoN7tLYiaLnncQlw2JQK2QGKTdmui0LDA/exec";
+
+  // 1. Tải danh sách lời chúc
+  function loadWishes() {
+    fetch(SCRIPT_URL)
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById("tagsWrap");
+        container.innerHTML = ""; // Xóa dữ liệu cũ
+        
+        if (!data || data.length === 0) {
+          container.innerHTML = "<div style='text-align:center; width:100%; color:#888;'>Chưa có lời chúc nào. Hãy là người đầu tiên gửi nhé!</div>";
+          return;
+        }
+
+        // Tạo mảng góc xoay ngẫu nhiên cho đẹp mắt giống giao diện mẫu của bạn
+        const rotations = ["-3deg", "2deg", "-1deg", "3deg", "-2deg"];
+
+        data.reverse().forEach((item, index) => {
+          const rot = rotations[index % rotations.length];
+          const div = document.createElement("div");
+          div.className = "wish-tag";
+          div.style.setProperty("--r", rot);
+          div.innerHTML = `
+            <div class="wa">${item.name || 'Khách mời'}</div>
+            <div class="wm">${item.message || ''}</div>
+          `;
+          container.appendChild(div);
+        });
+      })
+      .catch(err => {
+        console.error("Lỗi khi tải lời chúc:", err);
+        document.getElementById("tagsWrap").innerHTML = "<div style='text-align:center; width:100%; color:#888;'>Không thể tải lời chúc lúc này.</div>";
+      });
+  }
+
+  // 2. Gửi lời chúc mới
+  document.getElementById("wish-form").addEventListener("submit", function(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById("guestName").value;
+    const message = document.getElementById("guestMessage").value;
+    const btn = e.target.querySelector("button[type='submit']");
+    
+    btn.disabled = true;
+    btn.innerText = "Đang gửi...";
+
+    fetch(SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: name, message: message })
+    })
+    .then(() => {
+      alert("Cảm ơn bạn đã gửi lời chúc!");
+      document.getElementById("wish-form").reset();
+      btn.disabled = false;
+      btn.innerText = "Treo Lời Chúc";
+      setTimeout(loadWishes, 1000);
+    })
+    .catch(err => {
+      console.error("Lỗi gửi lời chúc:", err);
+      btn.disabled = false;
+      btn.innerText = "Treo Lời Chúc";
+    });
+  });
+
+  // Chạy ngay khi tải trang
+  loadWishes();
+</script>
 
   </div><!-- /gate-frame tạm đóng để hộp quà tràn viền -->
 
