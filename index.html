@@ -667,7 +667,7 @@ h2{font-size:clamp(2.1rem,6vw,2.9rem);margin-bottom:6px;}
 
   <img class="motif" src="https://itndgocigbwsddblvljn.supabase.co/storage/v1/object/public/cuoiN&amp;Q/day%20to%20hong.png" alt="Dây tơ hồng">
 
-  <!-- 09 — SỔ HỶ -->
+<!-- 09 — SỔ HỶ -->
 <section>
   <div class="eyebrow-num serif reveal">09</div>
   <div class="eyebrow reveal">Sổ Hỷ</div>
@@ -688,9 +688,9 @@ h2{font-size:clamp(2.1rem,6vw,2.9rem);margin-bottom:6px;}
 </section>
 
 <script>
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby2fzl5eST6UjzlaODi0mL6rPkQf6l9b4vyDZoN7tLYiaLnncQlw2JQK2QGKTdmui0LDA/exec";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzgWBPrk_8wjxV_lS47PZm02u4HOJSebIbmTHuywQrYSXmXQu6yO06IZY3SphkUYVCq/exec";
 
-  // 1. Tải danh sách lời chúc
+  // 1. Tải danh sách lời chúc từ Google Sheet
   function loadWishes() {
     fetch(SCRIPT_URL)
       .then(res => res.json())
@@ -703,7 +703,7 @@ h2{font-size:clamp(2.1rem,6vw,2.9rem);margin-bottom:6px;}
           return;
         }
 
-        // Tạo mảng góc xoay ngẫu nhiên cho đẹp mắt giống giao diện mẫu của bạn
+        // Tạo mảng góc xoay ngẫu nhiên cho thẻ lời chúc
         const rotations = ["-3deg", "2deg", "-1deg", "3deg", "-2deg"];
 
         data.reverse().forEach((item, index) => {
@@ -724,7 +724,7 @@ h2{font-size:clamp(2.1rem,6vw,2.9rem);margin-bottom:6px;}
       });
   }
 
-  // 2. Gửi lời chúc mới
+  // 2. Gửi lời chúc mới lên Google Sheet
   document.getElementById("wish-form").addEventListener("submit", function(e) {
     e.preventDefault();
     
@@ -735,27 +735,31 @@ h2{font-size:clamp(2.1rem,6vw,2.9rem);margin-bottom:6px;}
     btn.disabled = true;
     btn.innerText = "Đang gửi...";
 
+    // Gửi dạng URLSearchParams để tránh lỗi CORS và nhận dữ liệu chuẩn
+    const formData = new URLSearchParams();
+    formData.append("name", name);
+    formData.append("message", message);
+
     fetch(SCRIPT_URL, {
       method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name, message: message })
+      body: formData
     })
     .then(() => {
       alert("Cảm ơn bạn đã gửi lời chúc!");
       document.getElementById("wish-form").reset();
       btn.disabled = false;
       btn.innerText = "Treo Lời Chúc";
-      setTimeout(loadWishes, 1000);
+      setTimeout(loadWishes, 1200); // Tải lại danh sách sau 1.2s
     })
     .catch(err => {
       console.error("Lỗi gửi lời chúc:", err);
+      alert("Có lỗi xảy ra, vui lòng thử lại!");
       btn.disabled = false;
       btn.innerText = "Treo Lời Chúc";
     });
   });
 
-  // Chạy ngay khi tải trang
+  // Tải lời chúc khi mở trang
   loadWishes();
 </script>
 
