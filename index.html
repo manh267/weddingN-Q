@@ -326,7 +326,9 @@ h2{font-size:clamp(2.1rem,6vw,2.9rem);margin-bottom:6px;}
   opacity:var(--op);z-index:var(--z);
   transition:transform .6s cubic-bezier(.2,.8,.2,1),opacity .6s ease;
   user-select:none;-webkit-user-drag:none;
+  overflow:hidden;
 }
+.pc-slide img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;pointer-events:none;-webkit-user-drag:none;border-radius:3px;}
 .pc-arrow{position:absolute;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.35);border:1px solid var(--gold);color:var(--ivory);font-size:1.2rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:8;opacity:0;transition:opacity .4s ease;}
 .door-frame.opened .pc-arrow{opacity:1;}
 .pc-arrow.prev{left:8px;}
@@ -850,7 +852,7 @@ h2{font-size:clamp(2.1rem,6vw,2.9rem);margin-bottom:6px;}
 </div>
 
 <!-- QR MODAL POPUP -->
-<div id="overlay" onclick="if(event.target.id==='overlay')closeQr()" style="display:none;">
+<div id="overlay" onclick="if(event.target.id==='overlay')closeQr()">
   <div class="modal-card">
     <span class="close" onclick="closeQr()">&times;</span>
     <div class="eyebrow" id="modal-title">Mừng Cưới</div>
@@ -908,12 +910,12 @@ h2{font-size:clamp(2.1rem,6vw,2.9rem);margin-bottom:6px;}
       if(qrImg) qrImg.src = QR_CHU_NGAT;
     }
 
-    if(overlay) overlay.style.display = 'flex';
+    if(overlay) overlay.classList.add('active');
   }
 
   function closeQr() {
     const overlay = document.getElementById('overlay');
-    if(overlay) overlay.style.display = 'none';
+    if(overlay) overlay.classList.remove('active');
   }
 
   /* Typewriter */
