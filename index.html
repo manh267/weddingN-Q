@@ -726,6 +726,7 @@ h2{font-size:clamp(2.1rem,6vw,2.9rem);margin-bottom:6px;}
     <label>Lời chúc</label>
     <textarea id="guestMessage" rows="3" required placeholder="Gửi lời chúc đến đôi uyên ương..."></textarea>
     <button type="submit" class="wish-submit">Treo Lời Chúc</button>
+    <div id="wish-status" style="text-align:center;font-size:.78rem;margin-top:10px;min-height:18px;color:var(--red);"></div>
   </form>
 
   <div class="tags-wrap" id="tagsWrap">
@@ -792,13 +793,15 @@ h2{font-size:clamp(2.1rem,6vw,2.9rem);margin-bottom:6px;}
 
     fetch(SCRIPT_URL, {
       method: "POST",
+      mode: "no-cors",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded"
       },
       body: formData.toString()
     })
     .then(() => {
-      alert("Cảm ơn bạn đã gửi lời chúc!");
+      const status = document.getElementById("wish-status");
+      if(status){ status.textContent = "Đã gửi lời chúc, cảm ơn bạn!"; setTimeout(()=>status.textContent="",4000); }
       document.getElementById("wish-form").reset();
       btn.disabled = false;
       btn.innerText = "Treo Lời Chúc";
@@ -808,7 +811,8 @@ h2{font-size:clamp(2.1rem,6vw,2.9rem);margin-bottom:6px;}
     })
     .catch(err => {
       console.error("Lỗi gửi lời chúc:", err);
-      alert("Có lỗi xảy ra, vui lòng thử lại!");
+      const status = document.getElementById("wish-status");
+      if(status){ status.textContent = "Không gửi được, vui lòng thử lại."; setTimeout(()=>status.textContent="",4000); }
       btn.disabled = false;
       btn.innerText = "Treo Lời Chúc";
     });
