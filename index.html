@@ -854,199 +854,41 @@ h2{font-size:clamp(2.1rem,6vw,2.9rem);margin-bottom:6px;}
 </div>
 
 <script>
-/* ===== Loader sequence: 囍 tách đôi -> đường son chạy ngang -> giấy mở -> nội dung ===== */
-function openInvite(){
-  const loader=document.getElementById('loader');
-  const streak=document.getElementById('redStreak');
-  const fold=document.getElementById('paperFold');
-  loader.classList.add('opening');
-  streak.classList.add('run');
-  setTimeout(()=>fold.classList.add('open'),700);
-  setTimeout(()=>{
-    loader.classList.add('hidden');
-    streak.style.display='none';
-    initReveals();
-    startCountdown();
-  },1900);
-  playMusic();
-}
-
-const bgMusic=document.getElementById('bg-music');
-const musicBtn=document.getElementById('music-control');
-function playMusic(){
-  if(!bgMusic) return;
-  bgMusic.play().then(()=>{
-    musicBtn.style.display='flex';
-    musicBtn.classList.add('rotate-music');
-  }).catch(()=>{ musicBtn.style.display='flex'; });
-}
-function toggleMusic(){
-  if(bgMusic.paused){bgMusic.play();musicBtn.classList.add('rotate-music');}
-  else{bgMusic.pause();musicBtn.classList.remove('rotate-music');}
-}
-
-function openQr(name){document.getElementById('modal-title').innerText='Mừng Cưới '+name;document.getElementById('overlay').classList.add('active');}
-function closeQr(){document.getElementById('overlay').classList.remove('active');}
-
-/* Typewriter */
-function setupTypewriter(el){
-  const text=el.getAttribute('data-typewriter');el.innerHTML='';
-  [...text].forEach(ch=>{const s=document.createElement('span');s.className='tw-char';s.textContent=ch===' '?'\u00A0':ch;el.appendChild(s);});
-  const c=document.createElement('span');c.className='type-cursor';c.innerHTML='&nbsp;';el.appendChild(c);
-}
-function playTypewriter(el){el.querySelectorAll('.tw-char').forEach((c,i)=>setTimeout(()=>c.classList.add('on'),i*55));}
-document.querySelectorAll('[data-typewriter]').forEach(setupTypewriter);
-
-/* Calendar tháng 1/2027, Thứ 2 đầu tuần, đánh dấu ngày 3 */
-function buildCalendar(){
-  const grid=document.getElementById('calGrid');
-  const dows=['T2','T3','T4','T5','T6','T7','CN'];
-  dows.forEach(d=>{const el=document.createElement('div');el.className='cal-dow';el.textContent=d;grid.appendChild(el);});
-  const year=2027, month=0; // Tháng 1
-  const firstDay=new Date(year,month,1);
-  let startOffset=(firstDay.getDay()+6)%7; // 0=Mon
-  const daysInMonth=new Date(year,month+1,0).getDate();
-  const daysInPrev=new Date(year,month,0).getDate();
-  for(let i=0;i<startOffset;i++){
-    const el=document.createElement('div');el.className='cal-day muted';el.textContent=daysInPrev-startOffset+1+i;grid.appendChild(el);
-  }
-  for(let d=1;d<=daysInMonth;d++){
-    const el=document.createElement('div');
-    el.className='cal-day'+(d===3?' wed':'');
-    el.textContent=d;
-    if(d===3){
-      el.classList.add('wed');
-      const heart=document.createElement('div');heart.className='heart-mark';
-      heart.innerHTML='<svg viewBox="0 0 24 24"><path d="M12 21s-7-4.6-9.7-9C.5 8.8 1.6 5 5 4.2 7.4 3.6 9.7 4.8 12 8c2.3-3.2 4.6-4.4 7-3.8C22.4 5 23.5 8.8 21.7 12 19 16.4 12 21 12 21Z" fill="#f2c879" stroke="#fff2d6" stroke-width=".4"/></svg><span class="spark s1"></span><span class="spark s2"></span><span class="spark s3"></span>';
-      el.appendChild(heart);
-    }
-    grid.appendChild(el);
-  }
-  const totalCells=startOffset+daysInMonth;
-  const remain=(7-(totalCells%7))%7;
-  for(let i=1;i<=remain;i++){const el=document.createElement('div');el.className='cal-day muted';el.textContent=i;grid.appendChild(el);}
-}
-buildCalendar();
-
-/* Countdown text đơn giản */
-const weddingDate=new Date('2027-01-03T08:00:00').getTime();
-let cdInterval;
-function startCountdown(){
-  function tick(){
-    const now=Date.now();const dist=weddingDate-now;
-    if(dist<0){clearInterval(cdInterval);return;}
-    const d=Math.floor(dist/86400000);
-    const h=Math.floor(dist%86400000/3600000);
-    const m=Math.floor(dist%3600000/60000);
-    const s=Math.floor(dist%60000/1000);
-    document.getElementById('cdDays').textContent=String(d).padStart(3,'0');
-    document.getElementById('cdHours').textContent=String(h).padStart(2,'0');
-    document.getElementById('cdMins').textContent=String(m).padStart(2,'0');
-    document.getElementById('cdSecs').textContent=String(s).padStart(2,'0');
-  }
-  tick();cdInterval=setInterval(tick,1000);
-}
-
-/* Door open on scroll — bung ảnh + bắn confetti */
-function fireConfetti(container){
-  const n=26;
-  for(let i=0;i<n;i++){
-    const p=document.createElement('div');
-    p.className='confetti-piece '+(Math.random()>.5?'round':'sq');
-    const left=Math.random()*100;
-    const size=4+Math.random()*4;
-    p.style.left=left+'%';
-    p.style.width=size+'px';p.style.height=size+'px';
-    p.style.animationDuration=(1.6+Math.random()*1.2)+'s';
-    p.style.animationDelay=(Math.random()*.6)+'s';
-    p.classList.add('fall');
-    container.appendChild(p);
-    setTimeout(()=>p.remove(),3200);
-  }
-}
-function setupDoor(){
-  const door=document.getElementById('doorFrame');
-  const behind=door.querySelector('.door-behind');
-  const io=new IntersectionObserver(entries=>{
-    entries.forEach(e=>{
-      if(e.isIntersecting){
-        door.classList.add('opened');
-        setTimeout(()=>fireConfetti(behind),300);
-        setTimeout(()=>startCarousel(),600);
-        io.disconnect();
-      }
-    });
-  },{threshold:.5});
-  io.observe(door);
-  door.addEventListener('click',(ev)=>{
-    if(ev.target.closest('.pc-arrow'))return;
-    if(!door.classList.contains('opened')){door.classList.add('opened');fireConfetti(behind);setTimeout(()=>startCarousel(),600);}
-  });
-}
-
-/* ===== Carousel ảnh vuốt sang ===== */
-const pcSlides=()=>Array.from(document.querySelectorAll('.pc-slide'));
-let pcIndex=0, pcTimer=null, pcStarted=false;
-function pcRender(){
-  const slides=pcSlides();
-  const n=slides.length;
-  slides.forEach((el,i)=>{
-    let d=i-pcIndex;
-    if(d> n/2) d-=n;
-    if(d<-n/2) d+=n;
-    const ad=Math.abs(d);
-    el.style.setProperty('--d',d);
-    el.style.setProperty('--sc', d===0?1:(ad===1?0.78:0.6));
-    el.style.setProperty('--op', ad<=2?(1-ad*0.32):0);
-    el.style.setProperty('--z', 10-ad);
-  });
-  const dots=document.getElementById('pcDots');
-  if(dots){dots.innerHTML='';slides.forEach((_,i)=>{const s=document.createElement('span');if(i===pcIndex)s.className='on';dots.appendChild(s);});}
-}
-function pcMove(dir){
-  const n=pcSlides().length;
-  pcIndex=(pcIndex+dir+n)%n;
-  pcRender();
-  pcResetAutoplay();
-}
-function pcResetAutoplay(){
-  if(pcTimer)clearInterval(pcTimer);
-  pcTimer=setInterval(()=>pcMove(1),3200);
-}
-function startCarousel(){
-  if(pcStarted)return; pcStarted=true;
-  pcRender();
-  pcResetAutoplay();
-  const stage=document.getElementById('pcStage');
-  let startX=0,dragging=false;
-  const onDown=(x)=>{dragging=true;startX=x;if(pcTimer)clearInterval(pcTimer);};
-  const onUp=(x)=>{if(!dragging)return;dragging=false;const dx=x-startX;if(Math.abs(dx)>40)pcMove(dx<0?1:-1);else pcResetAutoplay();pcResetAutoplay();};
-  stage.addEventListener('touchstart',e=>onDown(e.touches[0].clientX),{passive:true});
-  stage.addEventListener('touchend',e=>onUp(e.changedTouches[0].clientX),{passive:true});
-  stage.addEventListener('mousedown',e=>onDown(e.clientX));
-  window.addEventListener('mouseup',e=>{if(dragging)onUp(e.clientX);});
-}
-
-/* Closing stamp + flash red */
-function setupCloser(){
-  const closer=document.getElementById('closer');
-  const stamp=document.getElementById('stamp');
-  const io=new IntersectionObserver(entries=>{
-    entries.forEach(e=>{
-      if(e.isIntersecting){
-        closer.classList.add('visible');
-        setTimeout(()=>stamp.classList.add('in'),500);
-        setTimeout(()=>closer.classList.add('flash-red'),1100);
-        io.disconnect();
-      }
-    });
-  },{threshold:.4});
-  io.observe(closer);
-}
 <script>
-  // Thay 2 đường link ảnh QR thật của Dâu & Rể vào đây
-  const QR_XUAN_QUYET = "LINK_ANH_QR_XUAN_QUYET.jpg";
-  const QR_CHU_NGAT   = "LINK_ANH_QR_CHU_NGAT.jpg";
+  /* ===== Loader sequence ===== */
+  function openInvite(){
+    const loader=document.getElementById('loader');
+    const streak=document.getElementById('redStreak');
+    const fold=document.getElementById('paperFold');
+    loader.classList.add('opening');
+    streak.classList.add('run');
+    setTimeout(()=>fold.classList.add('open'),700);
+    setTimeout(()=>{
+      loader.classList.add('hidden');
+      streak.style.display='none';
+      initReveals();
+      startCountdown();
+    },1900);
+    playMusic();
+  }
+
+  const bgMusic=document.getElementById('bg-music');
+  const musicBtn=document.getElementById('music-control');
+  function playMusic(){
+    if(!bgMusic) return;
+    bgMusic.play().then(()=>{
+      musicBtn.style.display='flex';
+      musicBtn.classList.add('rotate-music');
+    }).catch(()=>{ musicBtn.style.display='flex'; });
+  }
+  function toggleMusic(){
+    if(bgMusic.paused){bgMusic.play();musicBtn.classList.add('rotate-music');}
+    else{bgMusic.pause();musicBtn.classList.remove('rotate-music');}
+  }
+
+  /* ===== QR POPUP FUNCTION ===== */
+  const QR_XUAN_QUYET = "LINK_ANH_QR_XUAN_QUYET.jpg"; // Thay link QR Chú rể
+  const QR_CHU_NGAT   = "LINK_ANH_QR_CHU_NGAT.jpg";   // Thay link QR Cô dâu
 
   function openQr(person) {
     const overlay = document.getElementById('overlay');
@@ -1054,49 +896,216 @@ function setupCloser(){
     const qrImg = document.getElementById('qr-img');
 
     if (person === 'Xuân Quyết') {
-      modalTitle.innerText = "Mừng Cưới Chú Rể - Xuân Quyết";
-      qrImg.src = QR_XUAN_QUYET;
+      if(modalTitle) modalTitle.innerText = "Mừng Cưới Chú Rể - Xuân Quyết";
+      if(qrImg) qrImg.src = QR_XUAN_QUYET;
     } else if (person === 'Chu Ngát') {
-      modalTitle.innerText = "Mừng Cưới Cô Dâu - Chu Ngát";
-      qrImg.src = QR_CHU_NGAT;
+      if(modalTitle) modalTitle.innerText = "Mừng Cưới Cô Dâu - Chu Ngát";
+      if(qrImg) qrImg.src = QR_CHU_NGAT;
     }
 
-    overlay.style.display = 'flex';
+    if(overlay) overlay.style.display = 'flex';
   }
 
   function closeQr() {
-    document.getElementById('overlay').style.display = 'none';
+    const overlay = document.getElementById('overlay');
+    if(overlay) overlay.style.display = 'none';
   }
-/* Scroll reveals */
-function initReveals(){
-  const io=new IntersectionObserver(entries=>{
-    entries.forEach(entry=>{
-      if(entry.isIntersecting){
-        entry.target.classList.add('visible');
-        if(entry.target.hasAttribute('data-typewriter'))playTypewriter(entry.target);
-      }
-    });
-  },{threshold:0.22});
-  document.querySelectorAll('.reveal,.motif,.paper-photo,.lich-wrap').forEach(el=>io.observe(el));
-  setupDoor();
-  setupCloser();
-}
 
-document.getElementById('wish-form').addEventListener('submit',function(e){
-  e.preventDefault();
-  const inputs=this.querySelectorAll('input,textarea');
-  const name=inputs[0].value,msg=inputs[1].value;
-  const wrap=document.getElementById('tagsWrap');
-  const tag=document.createElement('div');
-  tag.className='wish-tag';
-  tag.style.setProperty('--r',(Math.random()*6-3)+'deg');
-  tag.innerHTML=`<div class="wa">${name}</div><div class="wt">vừa gửi</div><div class="wm">${msg}</div>`;
-  wrap.prepend(tag);
-  this.reset();
-  /* Gợi ý: nối vào Google Apps Script của bạn tại đây để lưu lời chúc lâu dài */
-});
-  
-</script>
+  /* Typewriter */
+  function setupTypewriter(el){
+    const text=el.getAttribute('data-typewriter');el.innerHTML='';
+    [...text].forEach(ch=>{const s=document.createElement('span');s.className='tw-char';s.textContent=ch===' '?'\u00A0':ch;el.appendChild(s);});
+    const c=document.createElement('span');c.className='type-cursor';c.innerHTML='&nbsp;';el.appendChild(c);
+  }
+  function playTypewriter(el){el.querySelectorAll('.tw-char').forEach((c,i)=>setTimeout(()=>c.classList.add('on'),i*55));}
+  document.querySelectorAll('[data-typewriter]').forEach(setupTypewriter);
+
+  /* Calendar tháng 1/2027 */
+  function buildCalendar(){
+    const grid=document.getElementById('calGrid');
+    if(!grid) return;
+    const dows=['T2','T3','T4','T5','T6','T7','CN'];
+    dows.forEach(d=>{const el=document.createElement('div');el.className='cal-dow';el.textContent=d;grid.appendChild(el);});
+    const year=2027, month=0; 
+    const firstDay=new Date(year,month,1);
+    let startOffset=(firstDay.getDay()+6)%7; 
+    const daysInMonth=new Date(year,month+1,0).getDate();
+    const daysInPrev=new Date(year,month,0).getDate();
+    for(let i=0;i<startOffset;i++){
+      const el=document.createElement('div');el.className='cal-day muted';el.textContent=daysInPrev-startOffset+1+i;grid.appendChild(el);
+    }
+    for(let d=1;d<=daysInMonth;d++){
+      const el=document.createElement('div');
+      el.className='cal-day'+(d===3?' wed':'');
+      el.textContent=d;
+      if(d===3){
+        el.classList.add('wed');
+        const heart=document.createElement('div');heart.className='heart-mark';
+        heart.innerHTML='<svg viewBox="0 0 24 24"><path d="M12 21s-7-4.6-9.7-9C.5 8.8 1.6 5 5 4.2 7.4 3.6 9.7 4.8 12 8c2.3-3.2 4.6-4.4 7-3.8C22.4 5 23.5 8.8 21.7 12 19 16.4 12 21 12 21Z" fill="#f2c879" stroke="#fff2d6" stroke-width=".4"/></svg><span class="spark s1"></span><span class="spark s2"></span><span class="spark s3"></span>';
+        el.appendChild(heart);
+      }
+      grid.appendChild(el);
+    }
+    const totalCells=startOffset+daysInMonth;
+    const remain=(7-(totalCells%7))%7;
+    for(let i=1;i<=remain;i++){const el=document.createElement('div');el.className='cal-day muted';el.textContent=i;grid.appendChild(el);}
+  }
+  buildCalendar();
+
+  /* Countdown */
+  const weddingDate=new Date('2027-01-03T08:00:00').getTime();
+  let cdInterval;
+  function startCountdown(){
+    function tick(){
+      const now=Date.now();const dist=weddingDate-now;
+      if(dist<0){clearInterval(cdInterval);return;}
+      const d=Math.floor(dist/86400000);
+      const h=Math.floor(dist%86400000/3600000);
+      const m=Math.floor(dist%3600000/60000);
+      const s=Math.floor(dist%60000/1000);
+      const elD = document.getElementById('cdDays'), elH = document.getElementById('cdHours'), elM = document.getElementById('cdMins'), elS = document.getElementById('cdSecs');
+      if(elD) elD.textContent=String(d).padStart(3,'0');
+      if(elH) elH.textContent=String(h).padStart(2,'0');
+      if(elM) elM.textContent=String(m).padStart(2,'0');
+      if(elS) elS.textContent=String(s).padStart(2,'0');
+    }
+    tick();cdInterval=setInterval(tick,1000);
+  }
+
+  /* Door & Confetti */
+  function fireConfetti(container){
+    const n=26;
+    for(let i=0;i<n;i++){
+      const p=document.createElement('div');
+      p.className='confetti-piece '+(Math.random()>.5?'round':'sq');
+      const left=Math.random()*100;
+      const size=4+Math.random()*4;
+      p.style.left=left+'%';
+      p.style.width=size+'px';p.style.height=size+'px';
+      p.style.animationDuration=(1.6+Math.random()*1.2)+'s';
+      p.style.animationDelay=(Math.random()*.6)+'s';
+      p.classList.add('fall');
+      container.appendChild(p);
+      setTimeout(()=>p.remove(),3200);
+    }
+  }
+  function setupDoor(){
+    const door=document.getElementById('doorFrame');
+    if(!door) return;
+    const behind=door.querySelector('.door-behind');
+    const io=new IntersectionObserver(entries=>{
+      entries.forEach(e=>{
+        if(e.isIntersecting){
+          door.classList.add('opened');
+          setTimeout(()=>fireConfetti(behind),300);
+          setTimeout(()=>startCarousel(),600);
+          io.disconnect();
+        }
+      });
+    },{threshold:.5});
+    io.observe(door);
+    door.addEventListener('click',(ev)=>{
+      if(ev.target.closest('.pc-arrow'))return;
+      if(!door.classList.contains('opened')){door.classList.add('opened');fireConfetti(behind);setTimeout(()=>startCarousel(),600);}
+    });
+  }
+
+  /* Carousel */
+  const pcSlides=()=>Array.from(document.querySelectorAll('.pc-slide'));
+  let pcIndex=0, pcTimer=null, pcStarted=false;
+  function pcRender(){
+    const slides=pcSlides();
+    const n=slides.length;
+    slides.forEach((el,i)=>{
+      let d=i-pcIndex;
+      if(d> n/2) d-=n;
+      if(d<-n/2) d+=n;
+      const ad=Math.abs(d);
+      el.style.setProperty('--d',d);
+      el.style.setProperty('--sc', d===0?1:(ad===1?0.78:0.6));
+      el.style.setProperty('--op', ad<=2?(1-ad*0.32):0);
+      el.style.setProperty('--z', 10-ad);
+    });
+    const dots=document.getElementById('pcDots');
+    if(dots){dots.innerHTML='';slides.forEach((_,i)=>{const s=document.createElement('span');if(i===pcIndex)s.className='on';dots.appendChild(s);});}
+  }
+  function pcMove(dir){
+    const n=pcSlides().length;
+    if(n===0) return;
+    pcIndex=(pcIndex+dir+n)%n;
+    pcRender();
+    pcResetAutoplay();
+  }
+  function pcResetAutoplay(){
+    if(pcTimer)clearInterval(pcTimer);
+    pcTimer=setInterval(()=>pcMove(1),3200);
+  }
+  function startCarousel(){
+    if(pcStarted)return; pcStarted=true;
+    pcRender();
+    pcResetAutoplay();
+    const stage=document.getElementById('pcStage');
+    if(!stage) return;
+    let startX=0,dragging=false;
+    const onDown=(x)=>{dragging=true;startX=x;if(pcTimer)clearInterval(pcTimer);};
+    const onUp=(x)=>{if(!dragging)return;dragging=false;const dx=x-startX;if(Math.abs(dx)>40)pcMove(dx<0?1:-1);else pcResetAutoplay();};
+    stage.addEventListener('touchstart',e=>onDown(e.touches[0].clientX),{passive:true});
+    stage.addEventListener('touchend',e=>onUp(e.changedTouches[0].clientX),{passive:true});
+    stage.addEventListener('mousedown',e=>onDown(e.clientX));
+    window.addEventListener('mouseup',e=>{if(dragging)onUp(e.clientX);});
+  }
+
+  /* Closing stamp */
+  function setupCloser(){
+    const closer=document.getElementById('closer');
+    if(!closer) return;
+    const stamp=document.getElementById('stamp');
+    const io=new IntersectionObserver(entries=>{
+      entries.forEach(e=>{
+        if(e.isIntersecting){
+          closer.classList.add('visible');
+          if(stamp) setTimeout(()=>stamp.classList.add('in'),500);
+          setTimeout(()=>closer.classList.add('flash-red'),1100);
+          io.disconnect();
+        }
+      });
+    },{threshold:.4});
+    io.observe(closer);
+  }
+
+  /* Scroll reveals */
+  function initReveals(){
+    const io=new IntersectionObserver(entries=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          entry.target.classList.add('visible');
+          if(entry.target.hasAttribute('data-typewriter'))playTypewriter(entry.target);
+        }
+      });
+    },{threshold:0.22});
+    document.querySelectorAll('.reveal,.motif,.paper-photo,.lich-wrap').forEach(el=>io.observe(el));
+    setupDoor();
+    setupCloser();
+  }
+
+  /* Wish form */
+  const wishForm = document.getElementById('wish-form');
+  if(wishForm){
+    wishForm.addEventListener('submit',function(e){
+      e.preventDefault();
+      const inputs=this.querySelectorAll('input,textarea');
+      const name=inputs[0].value,msg=inputs[1].value;
+      const wrap=document.getElementById('tagsWrap');
+      if(wrap){
+        const tag=document.createElement('div');
+        tag.className='wish-tag';
+        tag.style.setProperty('--r',(Math.random()*6-3)+'deg');
+        tag.innerHTML=`<div class="wa">${name}</div><div class="wt">vừa gửi</div><div class="wm">${msg}</div>`;
+        wrap.prepend(tag);
+      }
+      this.reset();
+    });
+  }
 </script>
 </body>
 </html>
