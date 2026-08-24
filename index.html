@@ -1043,7 +1043,30 @@ function setupCloser(){
   },{threshold:.4});
   io.observe(closer);
 }
+<script>
+  // Thay 2 đường link ảnh QR thật của Dâu & Rể vào đây
+  const QR_XUAN_QUYET = "LINK_ANH_QR_XUAN_QUYET.jpg";
+  const QR_CHU_NGAT   = "LINK_ANH_QR_CHU_NGAT.jpg";
 
+  function openQr(person) {
+    const overlay = document.getElementById('overlay');
+    const modalTitle = document.getElementById('modal-title');
+    const qrImg = document.getElementById('qr-img');
+
+    if (person === 'Xuân Quyết') {
+      modalTitle.innerText = "Mừng Cưới Chú Rể - Xuân Quyết";
+      qrImg.src = QR_XUAN_QUYET;
+    } else if (person === 'Chu Ngát') {
+      modalTitle.innerText = "Mừng Cưới Cô Dâu - Chu Ngát";
+      qrImg.src = QR_CHU_NGAT;
+    }
+
+    overlay.style.display = 'flex';
+  }
+
+  function closeQr() {
+    document.getElementById('overlay').style.display = 'none';
+  }
 /* Scroll reveals */
 function initReveals(){
   const io=new IntersectionObserver(entries=>{
@@ -1072,30 +1095,7 @@ document.getElementById('wish-form').addEventListener('submit',function(e){
   this.reset();
   /* Gợi ý: nối vào Google Apps Script của bạn tại đây để lưu lời chúc lâu dài */
 });
-  <script>
-  // Thay 2 đường link ảnh QR thật của Dâu & Rể vào đây
-  const QR_XUAN_QUYET = "LINK_ANH_QR_XUAN_QUYET.jpg";
-  const QR_CHU_NGAT   = "LINK_ANH_QR_CHU_NGAT.jpg";
-
-  function openQr(person) {
-    const overlay = document.getElementById('overlay');
-    const modalTitle = document.getElementById('modal-title');
-    const qrImg = document.getElementById('qr-img');
-
-    if (person === 'Xuân Quyết') {
-      modalTitle.innerText = "Mừng Cưới Chú Rể - Xuân Quyết";
-      qrImg.src = QR_XUAN_QUYET;
-    } else if (person === 'Chu Ngát') {
-      modalTitle.innerText = "Mừng Cưới Cô Dâu - Chu Ngát";
-      qrImg.src = QR_CHU_NGAT;
-    }
-
-    overlay.style.display = 'flex';
-  }
-
-  function closeQr() {
-    document.getElementById('overlay').style.display = 'none';
-  }
+  
 </script>
 </script>
 </body>
