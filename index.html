@@ -730,42 +730,40 @@ h2{font-size:clamp(2.1rem,6vw,2.9rem);margin-bottom:6px;}
   </form>
 
   <div class="tags-wrap" id="tagsWrap">
-    <!-- Lời chúc từ Google Sheet sẽ tự động nạp vào đây -->
     <div style="text-align: center; width: 100%; color: #888;">Đang tải lời chúc...</div>
   </div>
 </section>
 
 <script>
-  // URL Web App mới đã được cập nhật
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYubvdqXdLQFNiLSVq32WF3BpGtl-qwpa-l80GfIs-iDjbPrIYSoKI8qrIpNOz-prTiw/exec";
+  // DÁN URL WEB APP MỚI CỦA BẠN VÀO ĐÂY
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzx_WgwIprOsyNAYX0SaKwFCqpFVjmMIqpBxQ6wchU3apIdYBbxDqSMQQnXwNHeC-ab/exec";
 
-  // 1. Tải danh sách lời chúc từ Google Sheet (Có cơ chế anti-cache)
+  // 1. Tải danh sách lời chúc từ Google Sheet
   function loadWishes() {
-    // Thêm timestamp để buộc trình duyệt lấy dữ liệu tươi nhất từ server
     const cacheBustUrl = SCRIPT_URL + "?v=" + new Date().getTime();
 
     fetch(cacheBustUrl)
       .then(res => res.json())
       .then(data => {
         const container = document.getElementById("tagsWrap");
-        container.innerHTML = ""; // Xóa dữ liệu cũ
+        container.innerHTML = "";
         
         if (!data || data.length === 0) {
           container.innerHTML = "<div style='text-align:center; width:100%; color:#888;'>Chưa có lời chúc nào. Hãy là người đầu tiên gửi nhé!</div>";
           return;
         }
 
-        // Mảng góc xoay ngẫu nhiên cho thẻ lời chúc
         const rotations = ["-3deg", "2deg", "-1deg", "3deg", "-2deg"];
 
+        // Đảo ngược mảng để lời chúc mới nhất lên đầu
         data.reverse().forEach((item, index) => {
           const rot = rotations[index % rotations.length];
           const div = document.createElement("div");
           div.className = "wish-tag";
           div.style.setProperty("--r", rot);
           div.innerHTML = `
-            <div class="wa">${item.name || 'Khách mời'}</div>
-            <div class="wm">${item.message || ''}</div>
+            <div class="wa">${escapeHtml(item.name || 'Khách mời')}</div>
+            <div class="wm">${escapeHtml(item.message || '')}</div>
           `;
           container.appendChild(div);
         });
@@ -776,13 +774,19 @@ h2{font-size:clamp(2.1rem,6vw,2.9rem);margin-bottom:6px;}
       });
   }
 
-  // 2. Gửi lời chúc mới lên Google Sheet
+  // Hàm chống lỗi XSS (an toàn dữ liệu)
+  function escapeHtml(str) {
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  // 2. Gửi lời chúc mới lên Google Sheet (Sử dụng URLSearchParams chuẩn)
   document.getElementById("wish-form").addEventListener("submit", function(e) {
     e.preventDefault();
     
     const name = document.getElementById("guestName").value;
     const message = document.getElementById("guestMessage").value;
     const btn = e.target.querySelector("button[type='submit']");
+    const status = document.getElementById("wish-status");
     
     btn.disabled = true;
     btn.innerText = "Đang gửi...";
@@ -793,33 +797,33 @@ h2{font-size:clamp(2.1rem,6vw,2.9rem);margin-bottom:6px;}
 
     fetch(SCRIPT_URL, {
       method: "POST",
-      mode: "no-cors",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      body: formData.toString()
+      body: formData
     })
     .then(() => {
-      const status = document.getElementById("wish-status");
-      if(status){ status.textContent = "Đã gửi lời chúc, cảm ơn bạn!"; setTimeout(()=>status.textContent="",4000); }
+      if(status) { 
+        status.textContent = "Đã gửi lời chúc, cảm ơn bạn!"; 
+        setTimeout(() => status.textContent = "", 4000); 
+      }
       document.getElementById("wish-form").reset();
       btn.disabled = false;
       btn.innerText = "Treo Lời Chúc";
       
-      // Đợi 1.5s để Google Sheet hoàn tất việc ghi dòng mới rồi mới tải lại danh sách
-      setTimeout(loadWishes, 1500);
+      // Tải lại lời chúc sau 1 giây
+      setTimeout(loadWishes, 1000);
     })
     .catch(err => {
       console.error("Lỗi gửi lời chúc:", err);
-      const status = document.getElementById("wish-status");
-      if(status){ status.textContent = "Không gửi được, vui lòng thử lại."; setTimeout(()=>status.textContent="",4000); }
+      if(status) { 
+        status.textContent = "Không gửi được, vui lòng thử lại."; 
+        setTimeout(() => status.textContent = "", 4000); 
+      }
       btn.disabled = false;
       btn.innerText = "Treo Lời Chúc";
     });
   });
 
-  // Tải danh sách ngay khi mở trang
-  loadWishes();
+  // Tải danh sách khi trang tải xong
+  document.addEventListener("DOMContentLoaded", loadWishes);
 </script>
   </div><!-- /gate-frame tạm đóng để hộp quà tràn viền -->
 
