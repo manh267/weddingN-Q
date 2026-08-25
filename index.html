@@ -329,6 +329,12 @@ h2{font-size:clamp(2.1rem,6vw,2.9rem);margin-bottom:6px;}
   overflow:hidden;
 }
 .pc-slide img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;pointer-events:none;-webkit-user-drag:none;border-radius:3px;}
+.pc-slide[data-active="1"]{cursor:zoom-in;}
+.pc-lightbox{position:fixed;inset:0;z-index:9995;background:rgba(20,10,8,.92);display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .35s ease,visibility .35s ease;padding:24px;}
+.pc-lightbox.active{opacity:1;visibility:visible;}
+.pc-lightbox img{max-width:92vw;max-height:88vh;object-fit:contain;border-radius:4px;box-shadow:0 20px 60px rgba(0,0,0,.6);transform:scale(.92);transition:transform .35s cubic-bezier(.2,.8,.2,1);}
+.pc-lightbox.active img{transform:scale(1);}
+.pc-lightbox-close{position:absolute;top:18px;right:22px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:1.4rem;display:flex;align-items:center;justify-content:center;cursor:pointer;}
 .pc-arrow{position:absolute;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.35);border:1px solid var(--gold);color:var(--ivory);font-size:1.2rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:8;opacity:0;transition:opacity .4s ease;}
 .door-frame.opened .pc-arrow{opacity:1;}
 .pc-arrow.prev{left:8px;}
@@ -707,6 +713,10 @@ h2{font-size:clamp(2.1rem,6vw,2.9rem);margin-bottom:6px;}
     <img src="https://itndgocigbwsddblvljn.supabase.co/storage/v1/object/public/cuoiN&Q/r8.jpg" alt="Khoảnh khắc 8">
   </div>
 </div>
+  <div class="pc-lightbox" id="pcLightbox">
+    <span class="pc-lightbox-close" onclick="closeLightbox()">&times;</span>
+    <img id="pcLightboxImg" src="" alt="Ảnh phóng to">
+  </div>
   <img class="motif" src="https://itndgocigbwsddblvljn.supabase.co/storage/v1/object/public/cuoiN&amp;Q/day%20to%20hong.png" alt="Dây tơ hồng">
         </div><!-- /door-behind -->
         <div class="door-panel left"><div class="ring"></div></div>
@@ -1040,6 +1050,7 @@ h2{font-size:clamp(2.1rem,6vw,2.9rem);margin-bottom:6px;}
       el.style.setProperty('--sc', d===0?1:(ad===1?0.78:0.6));
       el.style.setProperty('--op', ad<=2?(1-ad*0.32):0);
       el.style.setProperty('--z', 10-ad);
+      el.setAttribute('data-active', d===0 ? '1' : '0');
     });
     const dots=document.getElementById('pcDots');
     if(dots){dots.innerHTML='';slides.forEach((_,i)=>{const s=document.createElement('span');if(i===pcIndex)s.className='on';dots.appendChild(s);});}
@@ -1055,19 +1066,60 @@ h2{font-size:clamp(2.1rem,6vw,2.9rem);margin-bottom:6px;}
     if(pcTimer)clearInterval(pcTimer);
     pcTimer=setInterval(()=>pcMove(1),3200);
   }
+  function openLightbox(src){
+    const lb=document.getElementById('pcLightbox');
+    const img=document.getElementById('pcLightboxImg');
+    if(!lb||!img) return;
+    img.src=src;
+    lb.classList.add('active');
+    if(pcTimer) clearInterval(pcTimer);
+  }
+  function closeLightbox(){
+    const lb=document.getElementById('pcLightbox');
+    if(!lb) return;
+    lb.classList.remove('active');
+    pcResetAutoplay();
+  }
   function startCarousel(){
     if(pcStarted)return; pcStarted=true;
     pcRender();
     pcResetAutoplay();
     const stage=document.getElementById('pcStage');
     if(!stage) return;
-    let startX=0,dragging=false;
-    const onDown=(x)=>{dragging=true;startX=x;if(pcTimer)clearInterval(pcTimer);};
-    const onUp=(x)=>{if(!dragging)return;dragging=false;const dx=x-startX;if(Math.abs(dx)>40)pcMove(dx<0?1:-1);else pcResetAutoplay();};
+    let startX=0,dragging=false,moved=false;
+    const onDown=(x)=>{dragging=true;moved=false;startX=x;if(pcTimer)clearInterval(pcTimer);};
+    const onUp=(x)=>{
+      if(!dragging)return;dragging=false;
+      const dx=x-startX;
+      if(Math.abs(dx)>40){moved=true;pcMove(dx<0?1:-1);}
+      else pcResetAutoplay();
+    };
     stage.addEventListener('touchstart',e=>onDown(e.touches[0].clientX),{passive:true});
     stage.addEventListener('touchend',e=>onUp(e.changedTouches[0].clientX),{passive:true});
     stage.addEventListener('mousedown',e=>onDown(e.clientX));
     window.addEventListener('mouseup',e=>{if(dragging)onUp(e.clientX);});
+    // Chạm vào ảnh đang ở giữa để phóng to
+    stage.addEventListener('click',(e)=>{
+      if(moved){moved=false;return;}
+      const slide=e.target.closest('.pc-slide');
+      if(!slide) return;
+      if(slide.getAttribute('data-active')==='1'){
+        const img=slide.querySelector('img');
+        if(img) openLightbox(img.src);
+      } else {
+        const idx=parseInt(slide.getAttribute('data-i'),10);
+        const n=pcSlides().length;
+        let d=idx-pcIndex; if(d>n/2)d-=n; if(d<-n/2)d+=n;
+        pcMove(d>0?1:-1);
+      }
+    });
+    // Chạm ra ngoài ảnh trong lightbox để đóng
+    const lb=document.getElementById('pcLightbox');
+    if(lb){
+      lb.addEventListener('click',(e)=>{
+        if(e.target.id==='pcLightbox') closeLightbox();
+      });
+    }
   }
 
   /* Closing stamp */
