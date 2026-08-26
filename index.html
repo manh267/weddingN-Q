@@ -145,7 +145,7 @@
     <div class="uk-grid uk-grid-collapse uk-child-width-1-2@m uk-grid-stack" uk-grid="">
       <!-- countdown -->
       <div class="uk-first-column">
-        <div class="countdown px-4 md:px-8 lg:px-10 w-full min-h-[70dvh] flex flex-col justify-end lg:h-dvh relative uk-sticky" uk-sticky="end: #invitation; media : 1024">
+        <div class="countdown px-4 md:px-8 lg:px-10 w-full min-h-[70dvh] flex flex-col justify-end lg:h-dvh relative" style="position:relative!important;">
   <div class="cover z-0">
     <img decoding="async" class="w-full! h-full! object-cover" src="ẢNH_NỀN_ĐẾM_NGƯỢC.jpg" alt="">
   </div>
@@ -441,12 +441,46 @@
       </form>
     </div>
 
-    <div class="wish-list mx-auto max-h-[600px] max-w-[480px] space-y-8 mt-10 grid gap-y-6 overflow-y-scroll" id="wishList">
-      <!-- Lời chúc hiển thị mẫu — thay bằng lời chúc thật hoặc load động từ Sheet -->
+    <div class="wish-list mx-auto max-h-[600px] max-w-[480px] space-y-4 mt-10 grid gap-y-4 overflow-y-scroll" id="wishList">
+      <div style="text-align:center;opacity:.7;font-size:.85rem;" id="wishListEmpty">Chưa có lời chúc nào — hãy là người đầu tiên!</div>
     </div>
   </div>
 </div>
+<style>
+.wish-item-card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:14px 16px;text-align:left;backdrop-filter:blur(4px);}
+.wish-item-card .wn{font-weight:600;font-size:.95rem;}
+.wish-item-card .wc{font-size:.75rem;opacity:.75;margin-top:2px;}
+.wish-item-card .wm{font-style:italic;margin-top:8px;font-size:.9rem;line-height:1.4;}
+</style>
 <script>
+var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbys67IFJIlbnwMlNfkqxBcj_0vrZ_dYauhNEI0VyXIxPs1VzV6kFp3QUaTQyAV7_s8Q/exec";
+
+function renderWish(item, prepend){
+  var el = document.getElementById('wishList');
+  var empty = document.getElementById('wishListEmpty');
+  if (empty) empty.style.display = 'none';
+  var card = document.createElement('div');
+  card.className = 'wish-item-card';
+  var msg = item.message ? '<div class="wm">"' + escapeHtml(item.message) + '"</div>' : '';
+  card.innerHTML = '<div class="wn">' + escapeHtml(item.name || 'Ẩn danh') + '</div>' +
+                    '<div class="wc">' + escapeHtml(item.confirm || '') + (item.number ? ' · ' + escapeHtml(String(item.number)) + ' người' : '') + '</div>' +
+                    msg;
+  if (prepend) el.insertBefore(card, el.firstChild.nextSibling && el.children[1] ? el.children[1] : el.firstChild);
+  else el.appendChild(card);
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function loadWishes(){
+  fetch(SCRIPT_URL).then(function(r){ return r.json(); }).then(function(list){
+    if (!list || !list.length) return;
+    list.slice().reverse().forEach(function(item){ renderWish(item, false); });
+  }).catch(function(err){ console.warn('Không tải được lời chúc:', err); });
+}
+loadWishes();
+
 function submitRSVP(e){
   e.preventDefault();
   var form = e.target;
@@ -457,8 +491,6 @@ function submitRSVP(e){
     message: form['w-message'].value,
     time: new Date().toISOString()
   };
-  // TODO: thay YOUR_SCRIPT_URL bằng URL Web App Google Apps Script sau khi deploy (xem hướng dẫn đính kèm)
-  var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbys67IFJIlbnwMlNfkqxBcj_0vrZ_dYauhNEI0VyXIxPs1VzV6kFp3QUaTQyAV7_s8Q/exec";
   fetch(SCRIPT_URL, {
     method: "POST",
     mode: "no-cors",
@@ -466,9 +498,11 @@ function submitRSVP(e){
     body: JSON.stringify(data)
   }).then(function(){
     document.getElementById('rsvp-message').classList.remove('hidden');
+    renderWish(data, true);
     form.reset();
   }).catch(function(){
     document.getElementById('rsvp-message').classList.remove('hidden');
+    renderWish(data, true);
     form.reset();
   });
   return false;
